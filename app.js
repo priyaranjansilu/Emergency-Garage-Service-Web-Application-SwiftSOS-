@@ -9,7 +9,7 @@ const dotenv = require('dotenv');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 
-dotenv.config();
+dotenv.config();  
 const port = process.env.PORT || 9500;
 
 // Middleware
