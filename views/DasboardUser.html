@@ -85,7 +85,7 @@
             <li id="garageDistance"><span>Distance:</span></li>
             <li id="garageAddress"><span>Garage Address:</span></li>
         </ul>
-        <div class="status" style="background-color: green; border: 2px solid black; height: 15px; width: 90px; border-radius: 5px; margin-left: 40px; margin-top: 60px; padding: 10px 10px;">Pending..</div>
+        <div class="status" id="status" style="background-color: green; border: 2px solid black; height: 15px; width: 90px; border-radius: 5px; margin-left: 40px; margin-top: 60px; padding: 10px 10px;">Pending..</div>
     </div>
     <div class="dashboard" id="dashboard">
         <div class="popup-form open" id="popupForm">
@@ -135,110 +135,121 @@
             document.getElementById('info').style.display = 'block';
         }
 
-    async function submitForm(event) {
-    event.preventDefault();
-    const vehicleType = document.getElementById('vehicleType').value;
-    const serviceType = document.getElementById('serviceType').value;
-    const addInfo = document.getElementById('addInfo').value;
+        async function submitForm(event) {
+            event.preventDefault();
+            const vehicleType = document.getElementById('vehicleType').value;
+            const serviceType = document.getElementById('serviceType').value;
+            const addInfo = document.getElementById('addInfo').value;
 
-    // Get the user's location
-    navigator.geolocation.getCurrentPosition(async (position) => {
-        const latitude = position.coords.latitude;
-        const longitude = position.coords.longitude;
-        const requestStatus = 2; // Assuming 1 means 'Pending'
+            // Get the user's location
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude;
+                const requestStatus = 2; // Assuming 1 means 'Pending'
 
-        const response = await fetch('/api/request', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                vehicleType,
-                serviceType,
-                addInfo,
-                latitude,
-                longitude,
-                request: requestStatus
-            })
-        });
+                const response = await fetch('/api/request', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        vehicleType,
+                        serviceType,
+                        addInfo,
+                        latitude,
+                        longitude,
+                        request: requestStatus
+                    })
+                });
 
-        if (response.ok) {
-            document.getElementById('VehicleType').innerText = `Vehicle Type: ${vehicleType}`;
-            document.getElementById('servicerequest').innerText = `Service request: ${serviceType}`;
-            
-            // Save the request status and details in localStorage
-            localStorage.setItem('requestStatus', requestStatus);
-            localStorage.setItem('vehicleType', vehicleType);
-            localStorage.setItem('serviceType', serviceType);
+                if (response.ok) {
+                    document.getElementById('VehicleType').innerText = `Vehicle Type: ${vehicleType}`;
+                    document.getElementById('servicerequest').innerText = `Service request: ${serviceType}`;
+                    
+                    // Save the request status and details in localStorage
+                    localStorage.setItem('requestStatus', requestStatus);
+                    localStorage.setItem('vehicleType', vehicleType);
+                    localStorage.setItem('serviceType', serviceType);
 
-            closePopupForm();
-            updateStatus(requestStatus); // Update the status in the DOM
-        } else {
-            console.error('Failed to save request');
+                    closePopupForm();
+                    
+                } else {
+                    console.error('Failed to save request');
+                }
+            }, (error) => {
+                console.error('Error getting location', error);
+            });
         }
-    }, (error) => {
-        console.error('Error getting location', error);
-    });
-}
 
-function updateStatus(requestValue) {
-    const statusElement = document.querySelector('.status');
-    console.log('Updating status to:', requestValue);
-    if (requestValue == 1) {
-        statusElement.style.backgroundColor = 'blue';
-        statusElement.innerText = 'Accepted';
-    } else if (requestValue == 0) {
-        statusElement.style.backgroundColor = 'red';
-        statusElement.innerText = 'Rejected';
-    } else {
-        statusElement.style.backgroundColor = 'green';
-        statusElement.innerText = 'Pending..';
-    }
-}
+       
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('closeFormBtn').addEventListener('click', closePopupForm);
+            document.getElementById('requestServiceForm').addEventListener('submit', submitForm);
 
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('closeFormBtn').addEventListener('click', closePopupForm);
-    document.getElementById('requestServiceForm').addEventListener('submit', submitForm);
+            let requestStatus = localStorage.getItem('requestStatus');
+            if (requestStatus) {
+                const vehicleType = localStorage.getItem('vehicleType');
+                const serviceType = localStorage.getItem('serviceType');
+                
+                document.getElementById('VehicleType').innerText = `Vehicle Type: ${vehicleType}`;
+                document.getElementById('servicerequest').innerText = `Service request: ${serviceType}`;
+               
+                // showInfoSection();
+            } else {
+                document.getElementById('popupForm').classList.add('open');
 
-    let requestStatus = localStorage.getItem('requestStatus');
-    if (requestStatus) {
-        const vehicleType = localStorage.getItem('vehicleType');
-        const serviceType = localStorage.getItem('serviceType');
-        
-        document.getElementById('VehicleType').innerText = `Vehicle Type: ${vehicleType}`;
-        document.getElementById('servicerequest').innerText = `Service request: ${serviceType}`;
-        updateStatus(requestStatus); // Update the status in the DOM
-        showInfoSection();
-    } else {
-        document.getElementById('popupForm').classList.add('open');
-    }
+            }
 
-    const nearestGarageName = localStorage.getItem('nearestGarageName');
-    const Distance = localStorage.getItem('Distance');
-    const Address = localStorage.getItem('Address');
-    const phoneno = localStorage.getItem('Phone');
+            const nearestGarageName = localStorage.getItem('nearestGarageName');
+            const Distance = localStorage.getItem('Distance');
+            const Address = localStorage.getItem('Address');
+            const phoneno = localStorage.getItem('Phone');
 
-    if (nearestGarageName) {
-        document.getElementById('GarageName').innerText = `Garage Name: ${nearestGarageName}`;
-    } else {
-        document.getElementById('GarageName').innerText = `Garage Name: Not Available`;
-    }
-    if (Distance) {
-        document.getElementById('garageDistance').innerText = `Distance: ${Distance}`;
-    } else {
-        document.getElementById('garageDistance').innerText = `Distance: Not Available`;
-    }
-    if (Address) {
-        document.getElementById('garageAddress').innerText = `Address: ${Address}`;
-    } else {
-        document.getElementById('garageAddress').innerText = `Address: Not Available`;
-    }
-    if (phoneno) {
-        document.getElementById('PhoneNo').innerText = `Phone No.: ${phoneno}`;
-    } else {
-        document.getElementById('PhoneNo').innerText = `Phone No.: Not Available`;
-    }
-});
+            if (nearestGarageName) {
+                document.getElementById('GarageName').innerText = `Garage Name: ${nearestGarageName}`;
+            } else {
+                document.getElementById('GarageName').innerText = `Garage Name: Not Available`;
+            }
+            if (Distance) {
+                document.getElementById('garageDistance').innerText = `Distance: ${Distance}`;
+            } else {
+                document.getElementById('garageDistance').innerText = `Distance: Not Available`;
+            }
+            if (Address) {
+                document.getElementById('garageAddress').innerText = `Address: ${Address}`;
+            } else {
+                document.getElementById('garageAddress').innerText = `Address: Not Available`;
+            }
+            if (phoneno) {
+                document.getElementById('PhoneNo').innerText = `Phone No.: ${phoneno}`;
+            } else {
+                document.getElementById('PhoneNo').innerText = `Phone No.: Not Available`;
+            }
+
+            // WebSocket Implementation
+            const ws = new WebSocket('ws://localhost:8080');
+
+            ws.onmessage = function(event) {
+                if (event.data instanceof Blob) {
+                    const reader = new FileReader();
+                    reader.onload = function() {
+                        if (reader.result === 'Accepted') {
+                            document.getElementById('status').style.backgroundColor = 'blue';
+                    }
+                    if (reader.result  === 'Rejected') {
+                        document.getElementById('status').style.backgroundColor = 'red';
+                    }
+                        document.getElementById('status').textContent = reader.result;
+                    };
+                    reader.readAsText(event.data); // Convert Blob to text
+                } else {
+                    document.getElementById('status').textContent = event.data;
+                }
+            };
+
+            ws.onopen = () => console.log('WebSocket connection opened');
+            ws.onerror = (error) => console.error('WebSocket Error:', error);
+        });
 
     </script>
 </body>
