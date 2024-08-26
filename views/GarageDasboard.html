@@ -41,8 +41,10 @@
             margin-top: 20px;
         }
     </style>
-    <script>
+     <script>
         document.addEventListener('DOMContentLoaded', async function() {
+            const ws = new WebSocket('ws://localhost:8080'); // WebSocket connection
+
             try {
                 const response = await fetch('/service-requests');
                 const serviceRequests = await response.json();
@@ -71,14 +73,32 @@
                         const requestId = this.getAttribute('data-id');
                         await updateRequestStatus(requestId, 1);
                         await deleteOtherRequests(requestId);
+                        ws.send('Accepted'); // Send 'accepted' status via WebSocket
                         location.reload();
                     });
                 });
+                
+
+async function deleteAcceptedRequest(requestId) {
+    try {
+        const response = await fetch(`/delete-accepted-request/${requestId}`, {
+            method: 'POST'
+        });
+
+        if (!response.ok) {
+            alert('Failed to delete accepted request');
+        }
+    } catch (error) {
+        console.error('Error deleting accepted request:', error);
+    }
+}
+
 
                 document.querySelectorAll('.reject-button').forEach(button => {
                     button.addEventListener('click', async function() {
                         const requestId = this.getAttribute('data-id');
                         await updateRequestStatus(requestId, 0);
+                        ws.send('Rejected'); // Send 'rejected' status via WebSocket
                         location.reload();
                     });
                 });
@@ -87,6 +107,9 @@
             } catch (error) {
                 console.error('Error fetching service requests:', error);
             }
+
+            ws.onopen = () => console.log('WebSocket connection opened');
+            ws.onerror = (error) => console.error('WebSocket Error:', error);
         });
 
         async function updateRequestStatus(requestId, status) {
@@ -149,6 +172,7 @@
                 .openPopup();
         }
     </script>
+    
 </head>
 <body>
     <header>
